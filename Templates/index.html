@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Kalkulator Modern</title>
+    <style>
+        /* --- CSS VARIABLES & RESET --- */
+        :root {
+            --bg-color: #121212;
+            --calc-bg: rgba(30, 30, 30, 0.6);
+            --display-color: #ffffff;
+            --btn-bg: rgba(255, 255, 255, 0.1);
+            --btn-hover: rgba(255, 255, 255, 0.2);
+            --btn-active: rgba(255, 255, 255, 0.3);
+            --accent-color: #00d2ff; /* Warna Cyan Modern */
+            --accent-hover: #00a8cc;
+            --operator-color: #ff9f0a;
+            --text-color: #ffffff;
+            --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-main);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            /* Latar belakang gradasi modern */
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* --- CONTAINER UTAMA --- */
+        .main-container {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            padding: 20px;
+        }
+
+        /* --- KALKULATOR BODY --- */
+        .calculator {
+            width: 350px;
+            background: var(--calc-bg);
+            backdrop-filter: blur(15px); /* Efek Kaca */
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- LAYAR DISPLAY --- */
+        .display-container {
+            padding: 30px 20px;
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+
+        .previous-operand {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1rem;
+            min-height: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .current-operand {
+            color: var(--display-color);
+            font-size: 2.5rem;
+            font-weight: 500;
+        }
+
+        /* --- TOMBOL-TOMBOL --- */
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            padding: 20px;
+        }
+
+        button {
+            height: 60px;
+            border-radius: 15px;
+            border: none;
+            outline: none;
+            background: var(--btn-bg);
+            color: var(--text-color);
+            font-size: 1.25rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        button:hover {
+            background: var(--btn-hover);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            background: var(--btn-active);
+            transform: translateY(1px);
+        }
+
+        /* Warna khusus untuk tombol */
+        .span-two {
+            grid-column: span 2;
+        }
+
+        .btn-operator {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .btn-equals {
+            background: var(--accent-color);
+            color: #000;
+        }
+        
+        .btn-equals:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-clear, .btn-delete {
+            color: #ff5e57;
+        }
+
+        /* --- PANEL RIWAYAT (HISTORY) --- */
+        .history-panel {
+            width: 250px;
+            height: 520px; /* Sesuaikan tinggi kalkulator */
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+        }
+
+        .history-title {
+            color: var(--text-color);
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .clear-history {
+            background: transparent;
+            color: #ff5e57;
+            font-size: 0.8rem;
+            height: auto;
+            padding: 5px 10px;
+        }
+
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Scrollbar kustom */
+        .history-list::-webkit-scrollbar {
+            width: 5px;
+        }
+        .history-list::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 10px;
+        }
+
+        .history-item {
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .history-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .history-expression {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-bottom: 2px;
+        }
+
+        .history-result {
+            font-size: 1.1rem;
+            color: var(--accent-color);
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .empty-history {
+            text-align: center;
+            color: #555;
+            font-size: 0.9rem;
+            margin-top: 50px;
+        }
+
+        /* --- TOAST NOTIFICATION --- */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 500;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .toast.show {
+            opacity: 1;
+            visibility: visible;
+            bottom: 50px;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 700px) {
+            .main-container {
+                flex-direction: column;
+                align-items: center;
+                padding: 10px;
+            }
+            .history-panel {
+                width: 350px;
+                height: 200px; /* Lebih pendek di mobile */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <!-- KALKULATOR UTAMA -->
+        <div class="calculator">
+            <div class="display-container" id="display-area">
+                <div class="previous-operand" data-previous-operand></div>
+                <div class="current-operand" data-current-operand>0</div>
+            </div>
+            <div class="buttons-grid">
+                <button class="span-two btn-clear" data-all-clear>AC</button>
+                <button class="btn-delete" data-delete>DEL</button>
+                <button class="btn-operator" data-operation>÷</button>
+                
+                <button data-number>7</button>
+                <button data-number>8</button>
+                <button data-number>9</button>
+                <button class="btn-operator" data-operation>×</button>
+                
+                <button data-number>4</button>
+                <button data-number>5</button>
+                <button data-number>6</button>
+                <button class="btn-operator" data-operation>-</button>
+                
+                <button data-number>1</button>
+                <button data-number>2</button>
+                <button data-number>3</button>
+                <button class="btn-operator" data-operation>+</button>
+                
+                <button data-number>.</button>
+                <button data-number>0</button>
+                <button class="span-two btn-equals" data-equals>=</button>
+            </div>
+        </div>
+
+        <!-- PANEL RIWAYAT -->
+        <div class="history-panel">
+            <div class="history-header">
+                <span class="history-title">Riwayat</span>
+                <button class="clear-history" id="clear-history-btn">Hapus</button>
+            </div>
+            <div class="history-list" id="history-list">
+                <div class="empty-history">Belum ada perhitungan</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFIKASI TOAST -->
+    <div class="toast" id="toast">Disalin ke clipboard!</div>
+
+    <script>
+        /**
+         * LOGIKA KALKULATOR
+         * Kelas ini menangani seluruh logika matematika dan manajemen state.
+         * Mirip dengan Class di Python.
+         */
+        class Calculator {
+            constructor(previousOperandTextElement, currentOperandTextElement) {
+                this.previousOperandTextElement = previousOperandTextElement;
+                this.currentOperandTextElement = currentOperandTextElement;
+                this.history = [];
+                this.clear();
+            }
+
+            clear() {
+                this.currentOperand = '0';
+                this.previousOperand = '';
+                this.operation = undefined;
+            }
+
+            delete() {
+                if (this.currentOperand === '0') return;
+                this.currentOperand = this.currentOperand.toString().slice(0, -1);
+                if (this.currentOperand === '') this.currentOperand = '0';
+            }
+
+            appendNumber(number) {
+                if (number === '.' && this.currentOperand.includes('.')) return;
+                if (this.currentOperand === '0' && number !== '.') {
+                    this.currentOperand = number.toString();
+                } else {
+                    this.currentOperand = this.currentOperand.toString() + number.toString();
+                }
+            }
+
+            chooseOperation(operation) {
+                if (this.currentOperand === '') return;
+                if (this.previousOperand !== '') {
+                    this.compute();
+                }
+                this.operation = operation;
+                this.previousOperand = this.currentOperand;
+                this.currentOperand = '';
+            }
+
+            compute() {
+                let computation;
+                const prev = parseFloat(this.previousOperand);
+                const current = parseFloat(this.currentOperand);
+                
+                if (isNaN(prev) || isNaN(current)) return;
+
+                switch (this.operation) {
+                    case '+':
+                        computation = prev + current;
+                        break;
+                    case '-':
+                        computation = prev - current;
+                        break;
+                    case '×':
+                        computation = prev * current;
+                        break;
+                    case '÷':
+                        if (current === 0) {
+                            this.showToast("Tidak bisa membagi dengan nol!");
+                            return;
+                        }
+                        computation = prev / current;
+                        break;
+                    default:
+                        return;
+                }
+
+                // Simpan ke riwayat sebelum mereset state
+                this.addToHistory(prev, this.operation, current, computation);
+
+                this.currentOperand = computation;
+                this.operation = undefined;
+                this.previousOperand = '';
+            }
+
+            getDisplayNumber(number) {
+                const stringNumber = number.toString();
+                const integerDigits = parseFloat(stringNumber.split('.')[0]);
+                const decimalDigits = stringNumber.split('.')[1];
+                let integerDisplay;
+                
+                if (isNaN(integerDigits)) {
+                    integerDisplay = '';
+                } else {
+                    // Format angka dengan pemisah ribuan lokal (Indonesia)
+                    integerDisplay = integerDigits.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+                }
+
+                if (decimalDigits != null) {
+                    return `${integerDisplay},${decimalDigits}`;
+                } else {
+                    return integerDisplay;
+                }
+            }
+
+            updateDisplay() {
+                // Mengganti titik desimal JS dengan koma untuk tampilan Indonesia (opsional, disini kita pakai titik standar internasional di kode tapi tampilan fleksibel)
+                // Kita gunakan titik sebagai standar input, tapi tampilan kita format.
+                this.currentOperandTextElement.innerText = this.getDisplayNumber(this.currentOperand);
+                
+                if (this.operation != null) {
+                    this.previousOperandTextElement.innerText = 
+                        `${this.getDisplayNumber(this.previousOperand)} ${this.operation}`;
+                } else {
+                    this.previousOperandTextElement.innerText = '';
+                }
+            }
+
+            addToHistory(prev, op, curr, result) {
+                const historyItem = {
+                    expression: `${this.getDisplayNumber(prev)} ${op} ${this.getDisplayNumber(curr)}`,
+                    result: this.getDisplayNumber(result)
+                };
+                this.history.unshift(historyItem); // Tambah ke awal array
+                this.renderHistory();
+            }
+
+            renderHistory() {
+                const historyList = document.getElementById('history-list');
+                historyList.innerHTML = '';
+
+                if (this.history.length === 0) {
+                    historyList.innerHTML = '<div class="empty-history">Belum ada perhitungan</div>';
+                    return;
+                }
+
+                this.history.forEach((item, index) => {
+                    const div = document.createElement('div');
+                    div.classList.add('history-item');
+                    div.innerHTML = `
+                        <div class="history-expression">${item.expression}</div>
+                        <div class="history-result">= ${item.result}</div>
+                    `;
+                    // Fitur: Klik history untuk memasukkan hasil ke layar utama
+                    div.addEventListener('click', () => {
+                        // Mengembalikan format angka (menghapus titik pemisah ribuan)
+                        let rawResult = item.result.replace(/\./g, '').replace(',', '.');
+                        this.currentOperand = rawResult;
+                        this.updateDisplay();
+                    });
+                    historyList.appendChild(div);
+                });
+            }
+
+            clearHistory() {
+                this.history = [];
+                this.renderHistory();
+            }
+
+            showToast(message) {
+                const toast = document.getElementById('toast');
+                toast.innerText = message;
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2000);
+            }
+        }
+
+        /* --- INISIALISASI & EVENT LISTENERS --- */
+        
+        const numberButtons = document.querySelectorAll('[data-number]');
+        const operationButtons = document.querySelectorAll('[data-operation]');
+        const equalsButton = document.querySelector('[data-equals]');
+        const deleteButton = document.querySelector('[data-delete]');
+        const allClearButton = document.querySelector('[data-all-clear]');
+        const previousOperandTextElement = document.querySelector('[data-previous-operand]');
+        const currentOperandTextElement = document.querySelector('[data-current-operand]');
+        const clearHistoryBtn = document.getElementById('clear-history-btn');
+        const displayArea = document.getElementById('display-area');
+
+        const calculator = new Calculator(previousOperandTextElement, currentOperandTextElement);
+
+        // Klik Tombol Angka
+        numberButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                calculator.appendNumber(button.innerText);
+                calculator.updateDisplay();
+            });
+        });
+
+        // Klik Tombol Operator
+        operationButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                calculator.chooseOperation(button.innerText);
+                calculator.updateDisplay();
+            });
+        });
+
+        // Klik Tombol Sama Dengan
+        equalsButton.addEventListener('click', button => {
+            calculator.compute();
+            calculator.updateDisplay();
+        });
+
+        // Klik Tombol AC (All Clear)
+        allClearButton.addEventListener('click', button => {
+            calculator.clear();
+            calculator.updateDisplay();
+        });
+
+        // Klik Tombol Delete
+        deleteButton.addEventListener('click', button => {
+            calculator.delete();
+            calculator.updateDisplay();
+        });
+
+        // Klik Tombol Hapus Riwayat
+        clearHistoryBtn.addEventListener('click', () => {
+            calculator.clearHistory();
+        });
+
+        // Fitur: Klik Display untuk Copy ke Clipboard
+        displayArea.addEventListener('click', () => {
+            const currentText = currentOperandTextElement.innerText;
+            if(currentText === '0' || !currentText) return;
+
+            // Bersihkan format tampilan (hapus titik pemisah ribuan) agar copy angka murni
+            const rawText = currentText.replace(/\./g, '').replace(',', '.');
+            
+            navigator.clipboard.writeText(rawText).then(() => {
+                calculator.showToast("Hasil disalin!");
+            }).catch(err => {
+                console.error('Gagal menyalin', err);
+            });
+        });
+
+        // Dukungan Keyboard
+        document.addEventListener('keydown', (e) => {
+            if ((e.key >= 0 && e.key <= 9) || e.key === '.') {
+                calculator.appendNumber(e.key);
+                calculator.updateDisplay();
+            }
+            if (e.key === '+' || e.key === '-') {
+                calculator.chooseOperation(e.key);
+                calculator.updateDisplay();
+            }
+            if (e.key === '*' || e.key === 'x') {
+                calculator.chooseOperation('×');
+                calculator.updateDisplay();
+            }
+            if (e.key === '/') {
+                e.preventDefault(); // Mencegah fitur quick find browser
+                calculator.chooseOperation('÷');
+                calculator.updateDisplay();
+            }
+            if (e.key === 'Enter' || e.key === '=') {
+                e.preventDefault();
+                calculator.compute();
+                calculator.updateDisplay();
+            }
+            if (e.key === 'Backspace') {
+                calculator.delete();
+                calculator.updateDisplay();
+            }
+            if (e.key === 'Escape') {
+                calculator.clear();
+                calculator.updateDisplay();
+            }
+        });
+
+    </script>
+</body>
+</html>
